@@ -4,105 +4,129 @@
     <title>SignalR MoveShape Demo</title>
     <style>
         .tank-body {
-            width: 76px;
-            height: 89px;
+            height: 76px;
+            width: 89px;
             /*background-color: #FF0000;*/
             background-image: url("/Content/img/tank_small.png");
             background-repeat: no-repeat;
             position: absolute;
         }
         .turret {
-            width: 33px;
-            height: 66px;
+            height: 33px;
+            width: 66px;
             background-image: url("/Content/img/turret_small.gif");
             background-repeat: no-repeat;
             position: absolute;
-            top:  15px;
-            left:  21px;
-            -webkit-transform-origin: 50% 14px;
-            -moz-transform-origin: 50% 14px;
-            -ms-transform-origin: 50% 14px;
-            -o-transform-origin: 50% 14px;
-            transform-origin: 50% 14px
-
+            left:  15px;
+            top:  21px;
+            -webkit-transform-origin: 14px 50%;
+            -moz-transform-origin: 14px 50%;
+            -ms-transform-origin: 14px 50%;
+            -o-transform-origin: 14px 50%;
+            transform-origin: 14px 50%
         }
 
 
-       </style>
+    </style>
 </head>
 <body>
     <script src="Scripts/jquery-1.10.2.min.js"></script>
     <script src="Scripts/jquery-ui-1.10.3.min.js"></script>
     <script src="Scripts/jquery.signalR-2.0.0.js"></script>
     <script src="/signalr/hubs"></script>
-    <script language="javascript">
-        $(function () {
-            var moveShapeHub = $.connection.moveShapeHub,
-                $tank = $("#shape1"),
-                // Send a maximum of 10 messages per second
-                // (mouse movements trigger a lot of messages)
-                messageFrequency = 400,
-                // Determine how often to send messages in
-                // time to abide by the messageFrequency
-                updateRate = 1000 / messageFrequency,
-                shapeModel = {
-                    left: 0,
-                    top: 0
-                },
-                moved = false;
+<script language="javascript">
+    
 
-            moveShapeHub.client.updateShape = function (model) {
-                shapeModel = model;
-                // Gradually move the shape towards the new location (interpolate)
-                // The updateRate is used as the duration because by the time
-                // we get to the next location we want to be at the "last" location
-                // We also clear the animation queue so that we start a new
-                // animation and don't lag behind.
-
-                $tank.animate(shapeModel, { duration: updateRate, queue: false });
-
-                //$shape.offset(shapeModel);
-            };
-
-            moveShapeHub.client.updateScene = function (model) {
-                shapeModel = model;
-                // Gradually move the shape towards the new location (interpolate)
-                // The updateRate is used as the duration because by the time
-                // we get to the next location we want to be at the "last" location
-                // We also clear the animation queue so that we start a new
-                // animation and don't lag behind.
-
-                $tank.animate(shapeModel, { duration: updateRate, queue: false });
-
-                //$shape.offset(shapeModel);
-            };
-
-
-            function updateServerModel() {
-                // Only update server if we have a new movement
-                if (moved) {
-                    moveShapeHub.server.updateModel(shapeModel);
-                        //.done(function (result){/*...*/});
-                    moved = false;
-                }
-            }
-
-            $.connection.hub.start().done(function () {
-                $tank.draggable({
-                    drag: function () {
-                        shapeModel = $tank.offset();
-                        moved = true;
-                    }
-                });
-                // Start the client side server update interval
-                setInterval(updateServerModel, updateRate);
-            });
+    jQuery.fn.rotate = function (degrees) {
+        $(this).css({
+            '-webkit-transform': 'rotate(' + degrees + 'deg)',
+            '-moz-transform': 'rotate(' + degrees + 'deg)',
+            '-ms-transform': 'rotate(' + degrees + 'deg)',
+            'transform': 'rotate(' + degrees + 'deg)'
         });
-    </script>
+    };
+
+    $(function () {
+        var moveShapeHub = $.connection.moveShapeHub,
+            $tank = $("#shape1"),
+            // Send a maximum of 10 messages per second
+            // (mouse movements trigger a lot of messages)
+            messageFrequency = 400,
+            // Determine how often to send messages in
+            // time to abide by the messageFrequency
+            updateRate = 1000 / messageFrequency,
+            shapeModel = {
+                left: 0,
+                top: 0
+            },
+            moved = false;
+
+        var buildTank = function(tankId) {
+            return $('<div id="tank-' + tankId + '" class="tank-body"><div class="turret"></div></div>').appendTo("body");
+        };
+        moveShapeHub.client.updateShape = function (model) {
+            shapeModel = model;
+            // Gradually move the shape towards the new location (interpolate)
+            // The updateRate is used as the duration because by the time
+            // we get to the next location we want to be at the "last" location
+            // We also clear the animation queue so that we start a new
+            // animation and don't lag behind.
+
+            $tank.animate(shapeModel, { duration: updateRate, queue: false });
+
+            //$shape.offset(shapeModel);
+        };
+
+        var updateTank = function(tank) {
+            $tank = $("#tank-" + tank.id);
+            if ($tank.length === 0) {
+                $tank = buildTank(tank.id);
+            }
+            $tank.offset({ top: tank.top, left: tank.left });
+            $tank.rotate(tank.angle);
+            $tank.find('.turret').rotate(tank.turretAngle);
+
+        };
+        moveShapeHub.client.updateScene = function (model) {
+            var tanks = model.tanks;
+            for (var i = 0; i < tanks.length; i++) {
+                updateTank(tanks[i]);
+            }
+            // Gradually move the shape towards the new location (interpolate)
+            // The updateRate is used as the duration because by the time
+            // we get to the next location we want to be at the "last" location
+            // We also clear the animation queue so that we start a new
+            // animation and don't lag behind.
+
+           // $tank.animate(shapeModel, { duration: updateRate, queue: false });
+
+            //$shape.offset(shapeModel);
+        };
+
+
+        function updateServerModel() {
+            // Only update server if we have a new movement
+            if (moved) {
+                moveShapeHub.server.updateModel(shapeModel);
+                //.done(function (result){/*...*/});
+                moved = false;
+            }
+        }
+
+        $.connection.hub.start().done(function () {
+            $tank.draggable({
+                drag: function () {
+                    shapeModel = $tank.offset();
+                    moved = true;
+                }
+            });
+            // Start the client side server update interval
+            setInterval(updateServerModel, updateRate);
+        });
+    });
+</script>
     <div>
-        <div id="tank1" class="tank-body">
-            <div class="turret"></div>
-        </div>
+        <div id="tank1" class="tank-body"><div class="turret"></div></div>
     </div>
 </body>
 </html>
