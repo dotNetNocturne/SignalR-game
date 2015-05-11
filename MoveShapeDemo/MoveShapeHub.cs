@@ -188,7 +188,7 @@ namespace MoveShapeDemo
                 angle += 180;
             }
 
-            var radAngle = 2*Math.PI*360/angle;
+            var radAngle = 2*Math.PI*angle/360;
 
             Top -= MOVING_SPEED*(float)Math.Sin(radAngle); // minus because Oy points down on the screen
             Left += MOVING_SPEED*(float)Math.Cos(radAngle);
