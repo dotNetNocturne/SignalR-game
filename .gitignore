@@ -2,3 +2,5 @@
 *.suo
 */obj/*
 packages/*
+MoveShapeDemo/MoveShapeDemo.csproj.user
+*.user

@@ -4,21 +4,47 @@
     <title>SignalR MoveShape Demo</title>
     <style>
         #shape {
-            width: 100px;
-            height: 100px;
-            background-color: #FF0000;
+            top:  300px;
+            left:  210px;
+            width: 76px;
+            height: 89px;
+            transform: rotate(20deg);
+            position: absolute;
+
         }
-    </style>
+        .tank-body {
+            width: 76px;
+            height: 89px;
+            /*background-color: #FF0000;*/
+            background-image: url("/Content/img/tank_small.png");
+            background-repeat: no-repeat;
+            position: absolute;
+        }
+        .turret {
+            width: 33px;
+            height: 66px;
+            background-image: url("/Content/img/turret_small.gif");
+            background-repeat: no-repeat;
+            position: absolute;
+            top:  15px;
+            left:  21px;
+
+            transform-origin: 50% 14px
+
+        }
+
+
+       </style>
 </head>
 <body>
     <script src="Scripts/jquery-1.10.2.min.js"></script>
     <script src="Scripts/jquery-ui-1.10.3.min.js"></script>
     <script src="Scripts/jquery.signalR-2.0.0.js"></script>
     <script src="/signalr/hubs"></script>
-    <script>
+    <script language="javascript">
         $(function () {
             var moveShapeHub = $.connection.moveShapeHub,
-                $shape = $("#shape"),
+                $tank = $("#shape1"),
                 // Send a maximum of 10 messages per second
                 // (mouse movements trigger a lot of messages)
                 messageFrequency = 400,
@@ -30,6 +56,7 @@
                     top: 0
                 },
                 moved = false;
+
             moveShapeHub.client.updateShape = function (model) {
                 shapeModel = model;
                 // Gradually move the shape towards the new location (interpolate)
@@ -38,10 +65,24 @@
                 // We also clear the animation queue so that we start a new
                 // animation and don't lag behind.
 
-                $shape.animate(shapeModel, { duration: updateRate, queue: false });
+                $tank.animate(shapeModel, { duration: updateRate, queue: false });
 
                 //$shape.offset(shapeModel);
             };
+
+            moveShapeHub.client.updateScene = function (model) {
+                shapeModel = model;
+                // Gradually move the shape towards the new location (interpolate)
+                // The updateRate is used as the duration because by the time
+                // we get to the next location we want to be at the "last" location
+                // We also clear the animation queue so that we start a new
+                // animation and don't lag behind.
+
+                $tank.animate(shapeModel, { duration: updateRate, queue: false });
+
+                //$shape.offset(shapeModel);
+            };
+
 
             function updateServerModel() {
                 // Only update server if we have a new movement
@@ -53,9 +94,9 @@
             }
 
             $.connection.hub.start().done(function () {
-                $shape.draggable({
+                $tank.draggable({
                     drag: function () {
-                        shapeModel = $shape.offset();
+                        shapeModel = $tank.offset();
                         moved = true;
                     }
                 });
@@ -64,7 +105,14 @@
             });
         });
     </script>
-
-<div id="shape"></div>
+    <div>
+        <div id="tank1">
+            <div class="tank-body"></div>
+            <!--<div class="turret"></div>
+            <div class="turret" style="transform: rotate(90deg);"></div>
+            <div class="turret" style="transform: rotate(180deg);"></div>-->
+            <div class="turret" style="transform: rotate(270deg);"></div>
+        </div>
+    </div>
 </body>
 </html>
