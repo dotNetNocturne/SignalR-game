@@ -15,13 +15,13 @@ namespace MoveShapeDemo
             {
                 var newTank = new TankModel(userId)
                 {
-                    Top=_random.Next(600),
+                    Top = _random.Next(600),
                     Left = _random.Next(1000),
                     Angle = _random.Next(360),
                     DesiredAngle = _random.Next(360),
                     TurretAngle = _random.Next(360),
                     TurretDesiredAngle = _random.Next(360),
-                    
+
                     MovingIncrement = _random.Next(2)
                 };
                 _tanks.Add(newTank);

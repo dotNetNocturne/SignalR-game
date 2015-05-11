@@ -55,52 +55,35 @@
             // Determine how often to send messages in
             // time to abide by the messageFrequency
             updateRate = 1000 / messageFrequency,
-            shapeModel = {
-                left: 0,
-                top: 0
-            },
             moved = false;
 
         var buildTank = function(tankId) {
             return $('<div id="tank-' + tankId + '" class="tank-body"><div class="turret"></div></div>').appendTo("body");
         };
-        moveShapeHub.client.updateShape = function (model) {
-            shapeModel = model;
-            // Gradually move the shape towards the new location (interpolate)
-            // The updateRate is used as the duration because by the time
-            // we get to the next location we want to be at the "last" location
-            // We also clear the animation queue so that we start a new
-            // animation and don't lag behind.
-
-            $tank.animate(shapeModel, { duration: updateRate, queue: false });
-
-            //$shape.offset(shapeModel);
-        };
-
         var updateTank = function(tank) {
             $tank = $("#tank-" + tank.id);
             if ($tank.length === 0) {
                 $tank = buildTank(tank.id);
             }
+
+            // Gradually move the shape towards the new location (interpolate)
+            // The updateRate is used as the duration because by the time
+            // we get to the next location we want to be at the "last" location
+            // We also clear the animation queue so that we start a new
+            // animation and don't lag behind.
+            // $tank.animate(shapeModel, { duration: updateRate, queue: false });
+
             $tank.offset({ top: tank.top, left: tank.left });
             $tank.rotate(tank.angle);
             $tank.find('.turret').rotate(tank.turretAngle);
-
         };
         moveShapeHub.client.updateScene = function (model) {
             var tanks = model.tanks;
             for (var i = 0; i < tanks.length; i++) {
                 updateTank(tanks[i]);
             }
-            // Gradually move the shape towards the new location (interpolate)
-            // The updateRate is used as the duration because by the time
-            // we get to the next location we want to be at the "last" location
-            // We also clear the animation queue so that we start a new
-            // animation and don't lag behind.
 
-           // $tank.animate(shapeModel, { duration: updateRate, queue: false });
 
-            //$shape.offset(shapeModel);
         };
 
 
