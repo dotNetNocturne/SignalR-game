@@ -3,15 +3,6 @@
 <head>
     <title>SignalR MoveShape Demo</title>
     <style>
-        #shape {
-            top:  300px;
-            left:  210px;
-            width: 76px;
-            height: 89px;
-            transform: rotate(20deg);
-            position: absolute;
-
-        }
         .tank-body {
             width: 76px;
             height: 89px;
@@ -28,7 +19,10 @@
             position: absolute;
             top:  15px;
             left:  21px;
-
+            -webkit-transform-origin: 50% 14px;
+            -moz-transform-origin: 50% 14px;
+            -ms-transform-origin: 50% 14px;
+            -o-transform-origin: 50% 14px;
             transform-origin: 50% 14px
 
         }
@@ -106,12 +100,8 @@
         });
     </script>
     <div>
-        <div id="tank1">
-            <div class="tank-body"></div>
-            <!--<div class="turret"></div>
-            <div class="turret" style="transform: rotate(90deg);"></div>
-            <div class="turret" style="transform: rotate(180deg);"></div>-->
-            <div class="turret" style="transform: rotate(270deg);"></div>
+        <div id="tank1" class="tank-body">
+            <div class="turret"></div>
         </div>
     </div>
 </body>
