@@ -79,14 +79,17 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\img\bg-grass.jpg" />
     <Content Include="Content\img\big_gun.png" />
     <Content Include="Content\img\BIG_MAMA.gif" />
     <Content Include="Content\img\tank_medium.png" />
     <Content Include="Content\img\red_bullet.gif" />
     <Content Include="Content\img\rocket_launcher.png" />
     <Content Include="Content\img\tank_small.png" />
+    <Content Include="Content\img\tank_small_center.gif" />
     <Content Include="Content\img\turret_medium.gif" />
     <Content Include="Content\img\turret_small.gif" />
+    <Content Include="Content\img\turret_small_center.gif" />
     <Content Include="packages.config" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
     <None Include="Web.Debug.config">

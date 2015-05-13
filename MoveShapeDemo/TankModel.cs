@@ -7,9 +7,9 @@ namespace MoveShapeDemo
         public string Id { get; private set; }
         private float _angle;
         private float _turretAngle;
-        private const float MOVING_SPEED = 1;
-        private const float ROTATION_SPEED = .3f;
-        private const float TURRET_SPEED = .5f;
+        private const float MOVING_SPEED = 5;
+        private const float ROTATION_SPEED = 1.3f*1;
+        private const float TURRET_SPEED = ROTATION_SPEED*1.5f;
 
         public TankModel(string id)
         {
@@ -31,6 +31,8 @@ namespace MoveShapeDemo
         public void Stop()
         {
             MovingIncrement = 0;
+            DesiredAngle = Angle;
+            TurretDesiredAngle = TurretAngle;
         }
 
         public int MovingIncrement { get; set; }

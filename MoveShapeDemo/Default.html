@@ -3,30 +3,35 @@
 <head>
     <title>SignalR MoveShape Demo</title>
     <style>
-        .tank-body {
-            height: 76px;
-            width: 89px;
-            /*background-color: #FF0000;*/
-            background-image: url("/Content/img/tank_small.png");
-            background-repeat: no-repeat;
-            position: absolute;
+        body {
+            /* http://www.turbosquid.com/FullPreview/Index.cfm/ID/678617 */
+            background-image: url("/Content/img/bg-grass.jpg");
         }
+         .tank-body {
+             height: 76px;
+             width: 89px;
+             background-repeat: no-repeat;
+             position: absolute;
+             top: -38px;
+             left: -44px;
+             transform-origin: 50% 50%;
+             }
         .turret {
             height: 33px;
             width: 66px;
-            background-image: url("/Content/img/turret_small.gif");
             background-repeat: no-repeat;
             position: absolute;
-            left:  15px;
             top:  21px;
+            left:  15px;
             -webkit-transform-origin: 14px 50%;
             -moz-transform-origin: 14px 50%;
             -ms-transform-origin: 14px 50%;
             -o-transform-origin: 14px 50%;
-            transform-origin: 14px 50%
+            transform-origin: 14px 50%;
         }
-
-
+        .turret img, .tank-body img {
+            position: absolute;
+        }
     </style>
 </head>
 <body>
@@ -34,82 +39,136 @@
     <script src="Scripts/jquery-ui-1.10.3.min.js"></script>
     <script src="Scripts/jquery.signalR-2.0.0.js"></script>
     <script src="/signalr/hubs"></script>
-<script language="javascript">
-    
-
-    jQuery.fn.rotate = function (degrees) {
-        $(this).css({
-            '-webkit-transform': 'rotate(' + degrees + 'deg)',
-            '-moz-transform': 'rotate(' + degrees + 'deg)',
-            '-ms-transform': 'rotate(' + degrees + 'deg)',
-            'transform': 'rotate(' + degrees + 'deg)'
-        });
-    };
-
-    $(function () {
-        var moveShapeHub = $.connection.moveShapeHub,
-            $tank = $("#shape1"),
-            // Send a maximum of 10 messages per second
-            // (mouse movements trigger a lot of messages)
-            messageFrequency = 400,
-            // Determine how often to send messages in
-            // time to abide by the messageFrequency
-            updateRate = 1000 / messageFrequency,
-            moved = false;
-
-        var buildTank = function(tankId) {
-            return $('<div id="tank-' + tankId + '" class="tank-body"><div class="turret"></div></div>').appendTo("body");
-        };
-        var updateTank = function(tank) {
-            $tank = $("#tank-" + tank.id);
-            if ($tank.length === 0) {
-                $tank = buildTank(tank.id);
-            }
-
-            // Gradually move the shape towards the new location (interpolate)
-            // The updateRate is used as the duration because by the time
-            // we get to the next location we want to be at the "last" location
-            // We also clear the animation queue so that we start a new
-            // animation and don't lag behind.
-            // $tank.animate(shapeModel, { duration: updateRate, queue: false });
-
-            $tank.offset({ top: tank.top, left: tank.left });
-            $tank.rotate(tank.angle);
-            $tank.find('.turret').rotate(tank.turretAngle);
-        };
-        moveShapeHub.client.updateScene = function (model) {
-            var tanks = model.tanks;
-            for (var i = 0; i < tanks.length; i++) {
-                updateTank(tanks[i]);
-            }
+    <script language="javascript">
 
 
-        };
-
-
-        function updateServerModel() {
-            // Only update server if we have a new movement
-            if (moved) {
-                moveShapeHub.server.updateModel(shapeModel);
-                //.done(function (result){/*...*/});
-                moved = false;
-            }
-        }
-
-        $.connection.hub.start().done(function () {
-            $tank.draggable({
-                drag: function () {
-                    shapeModel = $tank.offset();
-                    moved = true;
-                }
+        jQuery.fn.rotate = function (degrees) {
+            $(this).css({
+                '-webkit-transform': 'rotate(' + degrees + 'deg)',
+                '-moz-transform': 'rotate(' + degrees + 'deg)',
+                '-ms-transform': 'rotate(' + degrees + 'deg)',
+                'transform': 'rotate(' + degrees + 'deg)'
             });
-            // Start the client side server update interval
-            setInterval(updateServerModel, updateRate);
+        };
+
+        $(function () {
+            var moveShapeHub = $.connection.moveShapeHub,
+                $tank = $("#shape1"),
+                // Send a maximum of 10 messages per second
+                // (mouse movements trigger a lot of messages)
+                messageFrequency = 400,
+                // Determine how often to send messages in
+                // time to abide by the messageFrequency
+                updateRate = 1000 / messageFrequency,
+                moved = false,
+                oldTanks = {};
+
+            var buildTank = function (tankId) {
+                var $template = $("#tank-template");
+                var $clone = $template.clone().prop('id', 'tank-' + tankId).css({ "visibility": "visible" });
+                return $clone.appendTo("body");
+            };
+            var updateTank = function (tankModel) {
+                $tank = $("#tank-" + tankModel.id);
+                if ($tank.length === 0) {
+                    $tank = buildTank(tankModel.id);
+                }
+                var oldTank = oldTanks[tankModel.id];
+
+                // Gradually move the shape towards the new location (interpolate)
+                // The updateRate is used as the duration because by the time
+                // we get to the next location we want to be at the "last" location
+                // We also clear the animation queue so that we start a new
+                // animation and don't lag behind.
+
+                // $tank.animate(shapeModel, { duration: updateRate, queue: false });
+
+                if(oldTank == null || oldTank.top !== tankModel.top || oldTank.left !== tankModel.left)
+                    $tank.offset({ top: tankModel.top, left: tankModel.left });
+                if (oldTank == null || oldTank.angle !== tankModel.angle)
+                    $tank.rotate(-tankModel.angle);
+                if (oldTank == null || oldTank.turretAngle !== tankModel.turretAngle)
+                    $tank.find('.turret').rotate(-tankModel.turretAngle);
+
+                oldTanks[tankModel.id] = tankModel;
+            };
+            var cleanTanks = function (removedTankIds) {
+                for (var i = 0; i < removedTankIds.length; i++) {
+                    var removedTankId = removedTankIds[i];
+                    var $tank = $("#tank-" + removedTankId);
+                    if ($tank.length) {
+                        console.log("Removed tank " + removedTankId);
+                        $tank.remove();   
+                    }
+                }
+            };
+
+            moveShapeHub.client.updateScene = function (model) {
+                cleanTanks(model.removedTankIds);
+                var tanks = model.tanks;
+                for (var i = 0; i < tanks.length; i++) {
+                    updateTank(tanks[i]);
+                    $tank = $("#tank-" + tanks[i].id);
+
+                    console.log(
+                        tanks[i].left + "," + tanks[i].top + "," + tanks[i].angle + "," S+
+                        $tank.offset().left + "," + $tank.offset().top + "," + $tank[0].style['transform']);
+                }
+            };
+
+            $.connection.hub.start().done(function () {
+                $(window).unload(function () {
+                    $.connection.hub.stop();
+                });
+
+                $(document).keydown(function (event) {
+                    console.log(event);
+                    var cancel = false;
+                    if (event.keyCode === 32) { //space
+                        moveShapeHub.server.stop();
+                        cancel = true;
+                    }
+                    if (event.keyCode === 37) { //left
+                        moveShapeHub.server.rotate(10);
+                        cancel = true;
+                    }
+                    if (event.keyCode === 39) { //right
+                        moveShapeHub.server.rotate(-10);
+                        cancel = true;
+                    }
+                    if (event.keyCode === 33) { //PgUp
+                        moveShapeHub.server.rotateTurret(10);
+                        cancel = true;
+                    }
+                    if (event.keyCode === 34) { //PgDn
+                        moveShapeHub.server.rotateTurret(-10);
+                        cancel = true;
+                    }
+                    if (event.keyCode === 38) { //up
+                        moveShapeHub.server.moveForward();
+                        cancel = true;
+                    }
+                    if (event.keyCode === 40) { //down
+                        moveShapeHub.server.moveBackward();
+                        cancel = true;
+                    }
+                    if (cancel) {
+                        event.preventDefault();
+                        return false;
+                    }
+                    return true;
+                });
+            });
         });
-    });
-</script>
-    <div>
-        <div id="tank1" class="tank-body"><div class="turret"></div></div>
+    </script>
+
+    <div id="tank-template" class="tank-body" style="top: 100px; left: 100px; visibility: hidden;" >
+        <img src="Content/img/tank_small.png" />
+        <!--<img src="Content/img/tank_small_center.gif" />-->
+        <div class="turret">
+            <img src="/Content/img/turret_small.gif">
+            <!--<img src="/Content/img/turret_small_center.gif">-->
+        </div>
     </div>
 </body>
 </html>

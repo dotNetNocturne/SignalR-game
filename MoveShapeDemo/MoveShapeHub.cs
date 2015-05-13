@@ -38,11 +38,12 @@ namespace MoveShapeDemo
             //if (!_modelUpdated) 
             //    return;
 
-            GameManager.Tick();
 
+            GameManager.Tick();
             _hubContext.Clients
                 .All
                 .updateScene(GameManager);
+
 
              //This is how we can access the Clients property 
              //in a static hub method or outside of the hub entirely
@@ -98,9 +99,19 @@ namespace MoveShapeDemo
             return base.OnReconnected();
         }
 
-        public void Move()
+        public override Task OnDisconnected()
+        {
+            _broadcaster.GameManager.RemoveTank(Context.ConnectionId);
+            return base.OnDisconnected();
+        }
+
+        public void MoveForward()
         {
             TankModel.MoveForward();
+        }
+        public void MoveBackward()
+        {
+            TankModel.MoveBackward();
         }
         public void Stop()
         {
@@ -109,7 +120,11 @@ namespace MoveShapeDemo
 
         public void Rotate(float to)
         {
-            TankModel.DesiredAngle = to;
+            TankModel.DesiredAngle += to;
+        }
+        public void RotateTurret(float to)
+        {
+            TankModel.TurretDesiredAngle += to;
         }
     }
 
